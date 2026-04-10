@@ -1,24 +1,51 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+import { useEffect, useState } from 'react';
+import { StyleSheet } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { loadSettings } from '../lib/storage';
+import { ThemeProvider, useAppTheme } from '../lib/theme';
+import type { ThemeMode } from '../types';
 
-import { useColorScheme } from '@/hooks/use-color-scheme';
-
-export const unstable_settings = {
-  anchor: '(tabs)',
-};
-
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
+function AppShell() {
+  const { colors, mode } = useAppTheme();
 
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="modal" options={{ presentation: 'modal', title: 'Modal' }} />
+    <GestureHandlerRootView style={[styles.root, { backgroundColor: colors.background }]}> 
+      <Stack
+        screenOptions={{
+          headerShown: false,
+          contentStyle: { backgroundColor: colors.background },
+          animation: 'fade',
+        }}
+      >
+        <Stack.Screen name="index" />
+        <Stack.Screen name="home" />
+        <Stack.Screen name="game" />
+        <Stack.Screen name="complete" />
+        <Stack.Screen name="settings" />
       </Stack>
-      <StatusBar style="auto" />
+      <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
+    </GestureHandlerRootView>
+  );
+}
+
+export default function RootLayout() {
+  const [themeMode, setThemeMode] = useState<ThemeMode>('dark');
+
+  useEffect(() => {
+    loadSettings().then((settings) => {
+      setThemeMode(settings.themeMode);
+    });
+  }, []);
+
+  return (
+    <ThemeProvider mode={themeMode} setThemeMode={setThemeMode}>
+      <AppShell />
     </ThemeProvider>
   );
 }
+
+const styles = StyleSheet.create({
+  root: { flex: 1 },
+});
