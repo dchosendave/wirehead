@@ -161,7 +161,7 @@ export default function GameScreen() {
 
   const tileSize = Math.floor(Math.min((SCREEN_WIDTH - GRID_PADDING) / gridSize, (SCREEN_HEIGHT - 260) / gridSize));
 
-  const displayConnectedIds = winFlash ? new Set(grid.map((c) => c.id)) : connectedIds;
+  const displayConnectedIds = connectedIds;
 
   if (grid.length === 0) {
     return (

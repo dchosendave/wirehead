@@ -1,44 +1,40 @@
-import { Audio } from 'expo-av';
+import { AudioPlayer, createAudioPlayer, setAudioModeAsync } from 'expo-audio';
 
-type SoundInstance = InstanceType<typeof Audio.Sound>;
-
-let rotateSound: SoundInstance | null = null;
-let winSound: SoundInstance | null = null;
+let rotatePlayer: AudioPlayer | null = null;
+let winPlayer: AudioPlayer | null = null;
 
 export async function loadSounds(): Promise<void> {
   try {
-    await Audio.setAudioModeAsync({ playsInSilentModeIOS: true });
-    const [r, w] = await Promise.all([
-      Audio.Sound.createAsync(
-        require('../assets/sounds/rotate.wav'),
-        { shouldPlay: false, volume: 0.6 },
-      ),
-      Audio.Sound.createAsync(
-        require('../assets/sounds/win.wav'),
-        { shouldPlay: false, volume: 1.0 },
-      ),
-    ]);
-    rotateSound = r.sound;
-    winSound = w.sound;
+    await setAudioModeAsync({ playsInSilentMode: true });
+    rotatePlayer = createAudioPlayer(require('../assets/sounds/rotate.wav'));
+    winPlayer = createAudioPlayer(require('../assets/sounds/win.wav'));
+    rotatePlayer.volume = 0.6;
+    winPlayer.volume = 1.0;
   } catch {
-    // Sounds are non-critical; fail silently until real assets are dropped in
   }
 }
 
-export async function unloadSounds(): Promise<void> {
-  await Promise.all([rotateSound?.unloadAsync(), winSound?.unloadAsync()]);
-  rotateSound = null;
-  winSound = null;
+export function unloadSounds(): void {
+  rotatePlayer?.remove();
+  winPlayer?.remove();
+  rotatePlayer = null;
+  winPlayer = null;
 }
 
-export async function playRotate(): Promise<void> {
+export function playRotate(): void {
   try {
-    await rotateSound?.replayAsync();
+    if (rotatePlayer) {
+      rotatePlayer.seekTo(0);
+      rotatePlayer.play();
+    }
   } catch {}
 }
 
-export async function playWin(): Promise<void> {
+export function playWin(): void {
   try {
-    await winSound?.replayAsync();
+    if (winPlayer) {
+      winPlayer.seekTo(0);
+      winPlayer.play();
+    }
   } catch {}
 }
