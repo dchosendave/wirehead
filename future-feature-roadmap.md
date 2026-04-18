@@ -13,9 +13,15 @@ This document captures the most promising feature enhancements for WireHead afte
 
 ### High Priority
 
-#### Undo Stack
+#### Undo Stack [Done]
 
 Allow the player to reverse recent tile rotations.
+
+Current status:
+
+- Implemented in the active game flow
+- Undo history is persisted in saved game state
+- Players can reverse recent moves while a board is still in progress
 
 Why it matters:
 
@@ -235,33 +241,32 @@ Tradeoff:
 
 ## Recommended Development Order
 
-1. Undo stack
-2. Hint system
-3. Daily challenge
-4. Local achievements and streaks
-5. Accessibility improvements
-6. Shareable seed codes
-7. Alternate game modes
-8. Theme packs
-9. Expanded stats
+1. Hint system
+2. Daily challenge
+3. Local achievements and streaks
+4. Accessibility improvements
+5. Shareable seed codes
+6. Alternate game modes
+7. Theme packs
+8. Expanded stats
 
-## Why Undo Should Come First
+## Completed Recently
 
-Undo is the highest-leverage next feature because it improves the moment-to-moment experience of every puzzle without changing the rules of the game.
+### Undo Stack
+
+Undo was prioritized first because it improved the moment-to-moment experience of every puzzle without changing the rules of the game.
 
 It is also one of the best technical fits for the current codebase:
 
 - Moves are discrete tile rotations
 - The game already recalculates connectivity after every move
 - Progress is already saved locally
-- Undo can be introduced without changing level generation
+- Undo was introduced without changing level generation
 
 ## Notes For The Next Planning Pass
 
 When implementation begins, the next planning step should define:
 
-- Whether undo history is persisted between app launches
 - Whether hints are unlimited, cooldown-based, or capped per level
 - Whether daily challenge progress has its own stats model
 - Which accessibility options belong in v1.0.x versus later releases
-
