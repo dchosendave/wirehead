@@ -1,7 +1,7 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState } from 'react';
-import { Platform, StyleSheet, Text, TouchableOpacity, View, useWindowDimensions, type ViewStyle } from 'react-native';
+import { StyleSheet, Text, TouchableOpacity, View, useWindowDimensions, type ViewStyle } from 'react-native';
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -11,13 +11,11 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Defs, Line, LinearGradient, RadialGradient, Rect, Stop } from 'react-native-svg';
+import { DEFAULT_STATS } from '../constants/app-defaults';
+import { HOME_SCREEN_ANIMATION, MONOSPACE_FONT_FAMILY } from '../constants/ui-config';
 import { loadStats } from '../lib/storage';
 import { useAppTheme } from '../lib/theme';
 import type { Stats } from '../types';
-
-const MONO: string = Platform.OS === 'ios' ? 'Courier New' : 'monospace';
-
-const DEFAULT_STATS: Stats = { totalLevelsCompleted: 0, highestLevelReached: 1 };
 
 function SignalBackdrop({
   colors,
@@ -111,23 +109,35 @@ export default function HomeScreen() {
   const [stats, setStats] = useState<Stats>(DEFAULT_STATS);
 
   const heroOp = useSharedValue(0);
-  const heroY = useSharedValue(20);
+  const heroY = useSharedValue(HOME_SCREEN_ANIMATION.heroOffsetY);
   const telemetryOp = useSharedValue(0);
-  const telemetryY = useSharedValue(24);
+  const telemetryY = useSharedValue(HOME_SCREEN_ANIMATION.telemetryOffsetY);
   const commandOp = useSharedValue(0);
-  const commandY = useSharedValue(24);
+  const commandY = useSharedValue(HOME_SCREEN_ANIMATION.commandOffsetY);
 
   useEffect(() => {
     loadStats().then(setStats);
 
-    heroOp.value = withTiming(1, { duration: 680, easing: Easing.out(Easing.cubic) });
-    heroY.value = withTiming(0, { duration: 680, easing: Easing.out(Easing.exp) });
+    heroOp.value = withTiming(1, { duration: HOME_SCREEN_ANIMATION.heroDurationMs, easing: Easing.out(Easing.cubic) });
+    heroY.value = withTiming(0, { duration: HOME_SCREEN_ANIMATION.heroDurationMs, easing: Easing.out(Easing.exp) });
 
-    telemetryOp.value = withDelay(150, withTiming(1, { duration: 620, easing: Easing.out(Easing.cubic) }));
-    telemetryY.value = withDelay(150, withTiming(0, { duration: 620, easing: Easing.out(Easing.exp) }));
+    telemetryOp.value = withDelay(
+      HOME_SCREEN_ANIMATION.telemetryDelayMs,
+      withTiming(1, { duration: HOME_SCREEN_ANIMATION.telemetryDurationMs, easing: Easing.out(Easing.cubic) }),
+    );
+    telemetryY.value = withDelay(
+      HOME_SCREEN_ANIMATION.telemetryDelayMs,
+      withTiming(0, { duration: HOME_SCREEN_ANIMATION.telemetryDurationMs, easing: Easing.out(Easing.exp) }),
+    );
 
-    commandOp.value = withDelay(280, withTiming(1, { duration: 560, easing: Easing.out(Easing.cubic) }));
-    commandY.value = withDelay(280, withTiming(0, { duration: 560, easing: Easing.out(Easing.exp) }));
+    commandOp.value = withDelay(
+      HOME_SCREEN_ANIMATION.commandDelayMs,
+      withTiming(1, { duration: HOME_SCREEN_ANIMATION.commandDurationMs, easing: Easing.out(Easing.cubic) }),
+    );
+    commandY.value = withDelay(
+      HOME_SCREEN_ANIMATION.commandDelayMs,
+      withTiming(0, { duration: HOME_SCREEN_ANIMATION.commandDurationMs, easing: Easing.out(Easing.exp) }),
+    );
   }, [commandOp, commandY, heroOp, heroY, telemetryOp, telemetryY]);
 
   const heroStyle = useAnimatedStyle(() => ({ opacity: heroOp.value, transform: [{ translateY: heroY.value }] }));
@@ -257,7 +267,7 @@ const stylesShared = StyleSheet.create({
   telemetryLabel: {
     fontSize: 10,
     letterSpacing: 1.8,
-    fontFamily: MONO,
+    fontFamily: MONOSPACE_FONT_FAMILY,
     textTransform: 'uppercase',
   },
   telemetryValue: {
@@ -315,7 +325,7 @@ function createStyles(
       fontSize: 11,
       color: colors.textPrimary,
       letterSpacing: isSmallPhone ? 1.4 : 1.8,
-      fontFamily: MONO,
+      fontFamily: MONOSPACE_FONT_FAMILY,
     },
     logoArea: {
       alignItems: 'flex-start',
@@ -343,13 +353,13 @@ function createStyles(
       fontSize: 10,
       color: colors.textPrimary,
       letterSpacing: isSmallPhone ? 1.2 : 1.6,
-      fontFamily: MONO,
+      fontFamily: MONOSPACE_FONT_FAMILY,
     },
     kicker: {
       fontSize: isTablet ? 12 : 11,
       color: colors.ctaButton,
       letterSpacing: isTablet ? 3.1 : isSmallPhone ? 2.2 : 2.8,
-      fontFamily: MONO,
+      fontFamily: MONOSPACE_FONT_FAMILY,
       textTransform: 'uppercase',
     },
     title: {
@@ -395,7 +405,7 @@ function createStyles(
       fontSize: 10,
       color: colors.textMuted,
       letterSpacing: 1.4,
-      fontFamily: MONO,
+      fontFamily: MONOSPACE_FONT_FAMILY,
       textTransform: 'uppercase',
     },
     heroMetaValue: {
@@ -422,14 +432,14 @@ function createStyles(
       fontSize: 10,
       color: colors.textMuted,
       letterSpacing: isSmallPhone ? 1.5 : 2.1,
-      fontFamily: MONO,
+      fontFamily: MONOSPACE_FONT_FAMILY,
       textTransform: 'uppercase',
     },
     panelMeta: {
       fontSize: 10,
       color: colors.success,
       letterSpacing: 1.6,
-      fontFamily: MONO,
+      fontFamily: MONOSPACE_FONT_FAMILY,
       textTransform: 'uppercase',
     },
     telemetryGrid: {
@@ -453,13 +463,13 @@ function createStyles(
       fontWeight: '700',
       color: colors.textMuted,
       letterSpacing: 1.8,
-      fontFamily: MONO,
+      fontFamily: MONOSPACE_FONT_FAMILY,
     },
     telemetryValue: {
       fontSize: isUltraCompactHeight ? 13 : 15,
       fontWeight: '800',
       color: colors.textPrimary,
-      fontFamily: MONO,
+      fontFamily: MONOSPACE_FONT_FAMILY,
     },
     commandStrip: {
       display: 'none',
@@ -480,7 +490,7 @@ function createStyles(
       fontSize: 10,
       color: colors.textMuted,
       letterSpacing: isSmallPhone ? 1.5 : 2,
-      fontFamily: MONO,
+      fontFamily: MONOSPACE_FONT_FAMILY,
       textTransform: 'uppercase',
     },
     commandTitle: {
@@ -517,7 +527,7 @@ function createStyles(
       fontSize: 10,
       color: colors.background,
       letterSpacing: 1.8,
-      fontFamily: MONO,
+      fontFamily: MONOSPACE_FONT_FAMILY,
       textTransform: 'uppercase',
     },
     playText: {

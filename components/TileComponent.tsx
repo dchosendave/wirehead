@@ -13,6 +13,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 import Svg, { Circle, Line, Rect } from 'react-native-svg';
+import { TILE_ANIMATION } from '../constants/ui-config';
 import { getOpenEdges } from '../lib/tileUtils';
 import { useAppTheme } from '../lib/theme';
 import type { Rotation, TileCell } from '../types';
@@ -49,7 +50,7 @@ export function TileComponent({ tile, size, isConnected, onRotate }: Props) {
     if (delta < -180) delta += 360;
 
     targetAngle.current += delta;
-    accumulatedAngle.value = withTiming(targetAngle.current, { duration: 170 });
+    accumulatedAngle.value = withTiming(targetAngle.current, { duration: TILE_ANIMATION.rotateDurationMs });
   }, [accumulatedAngle, tile.rotation]);
 
   useAnimatedReaction(
@@ -58,15 +59,15 @@ export function TileComponent({ tile, size, isConnected, onRotate }: Props) {
       if (active) {
         pulseOpacity.value = withRepeat(
           withSequence(
-            withTiming(1, { duration: 700, easing: Easing.inOut(Easing.ease) }),
-            withTiming(0.5, { duration: 700, easing: Easing.inOut(Easing.ease) }),
+            withTiming(1, { duration: TILE_ANIMATION.pulseBrightDurationMs, easing: Easing.inOut(Easing.ease) }),
+            withTiming(0.5, { duration: TILE_ANIMATION.pulseDimDurationMs, easing: Easing.inOut(Easing.ease) }),
           ),
           -1,
           false,
         );
       } else {
         cancelAnimation(pulseOpacity);
-        pulseOpacity.value = withTiming(1, { duration: 200 });
+        pulseOpacity.value = withTiming(1, { duration: TILE_ANIMATION.pulseResetDurationMs });
       }
     },
   );
@@ -92,7 +93,7 @@ export function TileComponent({ tile, size, isConnected, onRotate }: Props) {
   function handlePress() {
     if (tile.isLocked) return;
     targetAngle.current += 90;
-    accumulatedAngle.value = withTiming(targetAngle.current, { duration: 170 });
+    accumulatedAngle.value = withTiming(targetAngle.current, { duration: TILE_ANIMATION.rotateDurationMs });
     onRotate(tile.id, (targetAngle.current % 360) as Rotation);
   }
 
@@ -108,14 +109,19 @@ export function TileComponent({ tile, size, isConnected, onRotate }: Props) {
     <Pressable
       onPress={handlePress}
       onPressIn={() => {
-        pressProgress.value = withTiming(1, { duration: 90 });
+        pressProgress.value = withTiming(1, { duration: TILE_ANIMATION.pressInDurationMs });
       }}
       onPressOut={() => {
-        pressProgress.value = withTiming(0, { duration: 160 });
+        pressProgress.value = withTiming(0, { duration: TILE_ANIMATION.pressOutDurationMs });
       }}
       style={{ width: size, height: size }}
     >
-      <Animated.View entering={FadeIn.duration(180).delay((tile.row * 6 + tile.col) * 14)} style={[{ width: size, height: size }, tileShellStyle]}>
+      <Animated.View
+        entering={FadeIn.duration(TILE_ANIMATION.fadeInDurationMs).delay(
+          (tile.row * TILE_ANIMATION.fadeInGridFactor + tile.col) * TILE_ANIMATION.fadeInStaggerMs,
+        )}
+        style={[{ width: size, height: size }, tileShellStyle]}
+      >
         <Svg width={size} height={size} style={{ position: 'absolute', top: 0, left: 0 }}>
           <Rect x={1} y={1} width={size - 2} height={size - 2} rx={3} fill={colors.gridCell} stroke={colors.cellBorder} strokeWidth={1} />
           <Rect

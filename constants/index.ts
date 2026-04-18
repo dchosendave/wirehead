@@ -188,9 +188,6 @@ export function getThemeStatusBarStyle(mode: ThemeMode): 'light' | 'dark' {
   return getThemeDefinition(mode).statusBarStyle;
 }
 
-export function getLevelConfig(level: number): { gridSize: number; bulbCount: number } {
-  if (level <= 10) return { gridSize: 4, bulbCount: 1 };
-  if (level <= 25) return { gridSize: 5, bulbCount: 2 };
-  if (level <= 50) return { gridSize: 6, bulbCount: 2 };
-  return { gridSize: 6, bulbCount: 3 };
-}
+export * from './app-defaults';
+export * from './game-config';
+export * from './ui-config';

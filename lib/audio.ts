@@ -1,4 +1,5 @@
 import { AudioPlayer, createAudioPlayer, setAudioModeAsync } from 'expo-audio';
+import { AUDIO_FEEDBACK } from '../constants/ui-config';
 
 let rotatePlayer: AudioPlayer | null = null;
 let winPlayer: AudioPlayer | null = null;
@@ -8,8 +9,8 @@ export async function loadSounds(): Promise<void> {
     await setAudioModeAsync({ playsInSilentMode: true });
     rotatePlayer = createAudioPlayer(require('../assets/sounds/rotate.wav'));
     winPlayer = createAudioPlayer(require('../assets/sounds/win.wav'));
-    rotatePlayer.volume = 0.6;
-    winPlayer.volume = 1.0;
+    rotatePlayer.volume = AUDIO_FEEDBACK.rotateVolume;
+    winPlayer.volume = AUDIO_FEEDBACK.winVolume;
   } catch {
   }
 }

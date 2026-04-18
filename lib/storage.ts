@@ -1,4 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { DEFAULT_SETTINGS, DEFAULT_STATS } from '../constants/app-defaults';
+import { getLevelSeed } from '../constants/game-config';
 import type { GameState, Settings, Stats } from '../types';
 
 const KEYS = {
@@ -6,18 +8,6 @@ const KEYS = {
   SETTINGS: 'settings',
   STATS: 'stats',
 } as const;
-
-const DEFAULT_SETTINGS: Settings = {
-  hapticsEnabled: true,
-  soundEnabled: true,
-  tutorialCompleted: false,
-  themeMode: 'dark',
-};
-
-const DEFAULT_STATS: Stats = {
-  totalLevelsCompleted: 0,
-  highestLevelReached: 1,
-};
 
 function isFiniteNumber(value: unknown): value is number {
   return typeof value === 'number' && Number.isFinite(value);
@@ -42,7 +32,7 @@ export async function loadGameState(): Promise<GameState | null> {
       currentLevel: parsed.currentLevel,
       totalCompleted: isFiniteNumber(parsed.totalCompleted) ? parsed.totalCompleted : 0,
       currentGrid: parsed.currentGrid,
-      seed: isFiniteNumber(parsed.seed) ? parsed.seed : parsed.currentLevel * 7919,
+      seed: isFiniteNumber(parsed.seed) ? parsed.seed : getLevelSeed(parsed.currentLevel),
       gridSize: parsed.gridSize,
       bulbCount: isFiniteNumber(parsed.bulbCount)
         ? parsed.bulbCount
@@ -66,9 +56,9 @@ export async function saveGameState(state: GameState): Promise<void> {
 export async function loadSettings(): Promise<Settings> {
   try {
     const raw = await AsyncStorage.getItem(KEYS.SETTINGS);
-    return raw ? { ...DEFAULT_SETTINGS, ...(JSON.parse(raw) as Partial<Settings>) } : DEFAULT_SETTINGS;
+    return raw ? { ...DEFAULT_SETTINGS, ...(JSON.parse(raw) as Partial<Settings>) } : { ...DEFAULT_SETTINGS };
   } catch {
-    return DEFAULT_SETTINGS;
+    return { ...DEFAULT_SETTINGS };
   }
 }
 
@@ -81,9 +71,9 @@ export async function saveSettings(settings: Settings): Promise<void> {
 export async function loadStats(): Promise<Stats> {
   try {
     const raw = await AsyncStorage.getItem(KEYS.STATS);
-    return raw ? { ...DEFAULT_STATS, ...(JSON.parse(raw) as Partial<Stats>) } : DEFAULT_STATS;
+    return raw ? { ...DEFAULT_STATS, ...(JSON.parse(raw) as Partial<Stats>) } : { ...DEFAULT_STATS };
   } catch {
-    return DEFAULT_STATS;
+    return { ...DEFAULT_STATS };
   }
 }
 

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { getThemeStatusBarStyle } from '../constants';
+import { DEFAULT_SETTINGS } from '../constants/app-defaults';
 import { loadSettings } from '../lib/storage';
 import { ThemeProvider, useAppTheme } from '../lib/theme';
 import type { ThemeMode } from '../types';
@@ -32,7 +33,7 @@ function AppShell() {
 }
 
 export default function RootLayout() {
-  const [themeMode, setThemeMode] = useState<ThemeMode>('dark');
+  const [themeMode, setThemeMode] = useState<ThemeMode>(DEFAULT_SETTINGS.themeMode);
 
   useEffect(() => {
     loadSettings().then((settings) => {

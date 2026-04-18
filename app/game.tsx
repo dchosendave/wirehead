@@ -2,11 +2,13 @@ import { Ionicons } from '@expo/vector-icons';
 import * as Haptics from 'expo-haptics';
 import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Dimensions, Platform, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Dimensions, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { GridComponent } from '../components/GridComponent';
 import { TutorialOverlay } from '../components/TutorialOverlay';
-import { getLevelConfig } from '../constants';
+import { DEFAULT_SETTINGS, DEFAULT_STATS } from '../constants/app-defaults';
+import { GAMEPLAY_FLOW, getLevelConfig, getLevelSeed } from '../constants/game-config';
+import { getBoardTileSize, MONOSPACE_FONT_FAMILY } from '../constants/ui-config';
 import { loadSounds, playRotate, playWin, unloadSounds } from '../lib/audio';
 import { checkConnectivity } from '../lib/connectivity';
 import { generateLevel } from '../lib/levelGenerator';
@@ -15,12 +17,6 @@ import { useAppTheme } from '../lib/theme';
 import type { GameState, MoveRecord, Rotation, Settings, Stats, TileCell } from '../types';
 
 const { width: SCREEN_WIDTH, height: SCREEN_HEIGHT } = Dimensions.get('window');
-const GRID_PADDING = 16;
-const MONO: string = Platform.OS === 'ios' ? 'Courier New' : 'monospace';
-
-function getLevelSeed(level: number) {
-  return level * 7919;
-}
 
 function createGameState(
   level: number,
@@ -55,8 +51,8 @@ export default function GameScreen() {
   const [undoStack, setUndoStack] = useState<MoveRecord[]>([]);
   const [showTutorial, setShowTutorial] = useState(false);
 
-  const settingsRef = useRef<Settings>({ hapticsEnabled: true, soundEnabled: true, tutorialCompleted: false, themeMode: 'dark' });
-  const statsRef = useRef<Stats>({ totalLevelsCompleted: 0, highestLevelReached: 1 });
+  const settingsRef = useRef<Settings>({ ...DEFAULT_SETTINGS });
+  const statsRef = useRef<Stats>({ ...DEFAULT_STATS });
   const undoStackRef = useRef<MoveRecord[]>([]);
   const completionTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -197,7 +193,7 @@ export default function GameScreen() {
           completionTimeoutRef.current = setTimeout(() => {
             completionTimeoutRef.current = null;
             router.replace('/complete');
-          }, 800);
+          }, GAMEPLAY_FLOW.completionRouteDelayMs);
         } else {
           saveGameState(
             createGameState(
@@ -253,7 +249,7 @@ export default function GameScreen() {
     });
   }, [currentLevel, gridSize, isComplete]);
 
-  const tileSize = Math.floor(Math.min((SCREEN_WIDTH - GRID_PADDING) / gridSize, (SCREEN_HEIGHT - 260) / gridSize));
+  const tileSize = getBoardTileSize(SCREEN_WIDTH, SCREEN_HEIGHT, gridSize);
 
   const displayConnectedIds = connectedIds;
   const canUndo = !isComplete && undoStack.length > 0;
@@ -347,7 +343,7 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
       fontSize: 10,
       color: colors.textMuted,
       letterSpacing: 2.1,
-      fontFamily: MONO,
+      fontFamily: MONOSPACE_FONT_FAMILY,
     },
     boardHeaderCopy: {
       flexShrink: 1,
@@ -399,7 +395,7 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
       fontWeight: '700',
       color: colors.textPrimary,
       letterSpacing: 1.3,
-      fontFamily: MONO,
+      fontFamily: MONOSPACE_FONT_FAMILY,
     },
     levelBadge: {
       alignItems: 'flex-end',
@@ -414,14 +410,14 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
       fontSize: 9,
       color: colors.textMuted,
       letterSpacing: 1.4,
-      fontFamily: MONO,
+      fontFamily: MONOSPACE_FONT_FAMILY,
     },
     levelBadgeValue: {
       marginTop: 2,
       fontSize: 17,
       fontWeight: '800',
       color: colors.wireConnected,
-      fontFamily: MONO,
+      fontFamily: MONOSPACE_FONT_FAMILY,
     },
     boardFrame: {
       width: '100%',
@@ -456,7 +452,7 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
       fontWeight: '800',
       color: colors.background,
       letterSpacing: 1.2,
-      fontFamily: MONO,
+      fontFamily: MONOSPACE_FONT_FAMILY,
     },
     undoButtonTextDisabled: {
       color: colors.textMuted,
@@ -480,13 +476,13 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
       fontSize: 10,
       color: colors.textMuted,
       letterSpacing: 1.5,
-      fontFamily: MONO,
+      fontFamily: MONOSPACE_FONT_FAMILY,
     },
     boardFooterValue: {
       fontSize: 13,
       color: colors.wireConnected,
       fontWeight: '800',
-      fontFamily: MONO,
+      fontFamily: MONOSPACE_FONT_FAMILY,
     },
   });
 }

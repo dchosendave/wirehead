@@ -12,6 +12,7 @@ import Animated, {
 } from 'react-native-reanimated';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Circle, Defs, RadialGradient, Rect, Stop } from 'react-native-svg';
+import { COMPLETE_SCREEN_ANIMATION, MONOSPACE_FONT_FAMILY } from '../constants/ui-config';
 import { useAppTheme } from '../lib/theme';
 
 function SuccessBackdrop({
@@ -57,24 +58,42 @@ export default function CompleteScreen() {
     [colors, isSmallPhone, isTablet],
   );
 
-  const ringScale = useSharedValue(0.88);
+  const ringScale = useSharedValue(COMPLETE_SCREEN_ANIMATION.ringInitialScale);
   const ringOpacity = useSharedValue(0);
   const titleOpacity = useSharedValue(0);
-  const titleY = useSharedValue(22);
+  const titleY = useSharedValue(COMPLETE_SCREEN_ANIMATION.titleOffsetY);
   const detailOpacity = useSharedValue(0);
-  const detailY = useSharedValue(20);
+  const detailY = useSharedValue(COMPLETE_SCREEN_ANIMATION.detailOffsetY);
   const actionsOpacity = useSharedValue(0);
-  const actionsY = useSharedValue(24);
+  const actionsY = useSharedValue(COMPLETE_SCREEN_ANIMATION.actionsOffsetY);
 
   useEffect(() => {
     ringScale.value = withSpring(1, { damping: 13, stiffness: 170, mass: 0.9 });
-    ringOpacity.value = withTiming(1, { duration: 320, easing: Easing.out(Easing.quad) });
-    titleOpacity.value = withDelay(120, withTiming(1, { duration: 520, easing: Easing.out(Easing.cubic) }));
-    titleY.value = withDelay(120, withTiming(0, { duration: 520, easing: Easing.out(Easing.exp) }));
-    detailOpacity.value = withDelay(220, withTiming(1, { duration: 480, easing: Easing.out(Easing.cubic) }));
-    detailY.value = withDelay(220, withTiming(0, { duration: 480, easing: Easing.out(Easing.exp) }));
-    actionsOpacity.value = withDelay(320, withTiming(1, { duration: 420, easing: Easing.out(Easing.cubic) }));
-    actionsY.value = withDelay(320, withTiming(0, { duration: 420, easing: Easing.out(Easing.exp) }));
+    ringOpacity.value = withTiming(1, { duration: COMPLETE_SCREEN_ANIMATION.ringFadeDurationMs, easing: Easing.out(Easing.quad) });
+    titleOpacity.value = withDelay(
+      COMPLETE_SCREEN_ANIMATION.titleDelayMs,
+      withTiming(1, { duration: COMPLETE_SCREEN_ANIMATION.titleDurationMs, easing: Easing.out(Easing.cubic) }),
+    );
+    titleY.value = withDelay(
+      COMPLETE_SCREEN_ANIMATION.titleDelayMs,
+      withTiming(0, { duration: COMPLETE_SCREEN_ANIMATION.titleDurationMs, easing: Easing.out(Easing.exp) }),
+    );
+    detailOpacity.value = withDelay(
+      COMPLETE_SCREEN_ANIMATION.detailDelayMs,
+      withTiming(1, { duration: COMPLETE_SCREEN_ANIMATION.detailDurationMs, easing: Easing.out(Easing.cubic) }),
+    );
+    detailY.value = withDelay(
+      COMPLETE_SCREEN_ANIMATION.detailDelayMs,
+      withTiming(0, { duration: COMPLETE_SCREEN_ANIMATION.detailDurationMs, easing: Easing.out(Easing.exp) }),
+    );
+    actionsOpacity.value = withDelay(
+      COMPLETE_SCREEN_ANIMATION.actionsDelayMs,
+      withTiming(1, { duration: COMPLETE_SCREEN_ANIMATION.actionsDurationMs, easing: Easing.out(Easing.cubic) }),
+    );
+    actionsY.value = withDelay(
+      COMPLETE_SCREEN_ANIMATION.actionsDelayMs,
+      withTiming(0, { duration: COMPLETE_SCREEN_ANIMATION.actionsDurationMs, easing: Easing.out(Easing.exp) }),
+    );
   }, [actionsOpacity, actionsY, detailOpacity, detailY, ringOpacity, ringScale, titleOpacity, titleY]);
 
   const ringStyle = useAnimatedStyle(() => ({
@@ -171,7 +190,7 @@ function createStyles(
       fontSize: 10,
       color: colors.textMuted,
       letterSpacing: 1.8,
-      fontFamily: 'monospace',
+      fontFamily: MONOSPACE_FONT_FAMILY,
     },
     hero: {
       width: '100%',
@@ -183,7 +202,7 @@ function createStyles(
       fontSize: isTablet ? 12 : 11,
       color: colors.ctaButton,
       letterSpacing: isSmallPhone ? 1.8 : 2.2,
-      fontFamily: 'monospace',
+      fontFamily: MONOSPACE_FONT_FAMILY,
     },
     ring: {
       width: isTablet ? 132 : isSmallPhone ? 96 : 112,
@@ -234,7 +253,7 @@ function createStyles(
       fontSize: 9,
       color: colors.textMuted,
       letterSpacing: 1.4,
-      fontFamily: 'monospace',
+      fontFamily: MONOSPACE_FONT_FAMILY,
     },
     statValue: {
       marginTop: 3,

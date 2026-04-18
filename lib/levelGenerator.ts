@@ -1,5 +1,11 @@
 import type { TileCell, TileType, Rotation, Direction } from '../types';
 import {
+  GENERATOR_FILLER_TYPES,
+  GENERATOR_MIN_SCRAMBLED_TILE_RATIO,
+  GENERATOR_ROTATIONS,
+  getPowerSourcePosition,
+} from '../constants/game-config';
+import {
   OPPOSITE,
   DIR_TO_DELTA,
   getTileTypeFromConnections,
@@ -78,9 +84,6 @@ function findPath(
   return dfs(start, [start]);
 }
 
-const FILLER_TYPES: TileType[] = ['straight', 'elbow', 't-junction', 'dead-end'];
-const ROTATIONS: Rotation[] = [0, 90, 180, 270];
-
 export function generateLevel(
   gridSize: number,
   bulbCount: number,
@@ -97,8 +100,7 @@ export function generateLevel(
   }
 
   // Power source at center
-  const centerRow = Math.floor(gridSize / 2);
-  const centerCol = Math.floor(gridSize / 2);
+  const { row: centerRow, col: centerCol } = getPowerSourcePosition(gridSize);
   const powerId = `${centerRow}_${centerCol}`;
   const powerPos = { row: centerRow, col: centerCol };
 
@@ -156,8 +158,8 @@ export function generateLevel(
         rotation = findRotationForEdges(tileType, cellDirs);
       } else {
         // Filler / decoy tile
-        tileType = FILLER_TYPES[Math.floor(rng() * FILLER_TYPES.length)];
-        rotation = ROTATIONS[Math.floor(rng() * 4)];
+        tileType = GENERATOR_FILLER_TYPES[Math.floor(rng() * GENERATOR_FILLER_TYPES.length)];
+        rotation = GENERATOR_ROTATIONS[Math.floor(rng() * GENERATOR_ROTATIONS.length)];
       }
 
       solutionRotations[id] = rotation;
@@ -170,13 +172,13 @@ export function generateLevel(
   let scrambledCount = 0;
 
   for (const cell of nonLocked) {
-    const newRot = ROTATIONS[Math.floor(rng() * 4)];
+    const newRot = GENERATOR_ROTATIONS[Math.floor(rng() * GENERATOR_ROTATIONS.length)];
     cell.rotation = newRot;
     if (newRot !== solutionRotations[cell.id]) scrambledCount++;
   }
 
   // Ensure at least 50% differ from solution
-  const threshold = Math.ceil(nonLocked.length * 0.5);
+  const threshold = Math.ceil(nonLocked.length * GENERATOR_MIN_SCRAMBLED_TILE_RATIO);
   if (scrambledCount < threshold) {
     const atSolution = shuffle(
       nonLocked.filter((cell) => cell.rotation === solutionRotations[cell.id]),
@@ -184,7 +186,7 @@ export function generateLevel(
     );
     for (const cell of atSolution) {
       if (scrambledCount >= threshold) break;
-      const others = ROTATIONS.filter((r) => r !== solutionRotations[cell.id]);
+      const others = GENERATOR_ROTATIONS.filter((r) => r !== solutionRotations[cell.id]);
       cell.rotation = others[Math.floor(rng() * others.length)];
       scrambledCount++;
     }

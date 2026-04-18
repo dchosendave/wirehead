@@ -8,6 +8,7 @@ import Animated, {
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
+import { MONOSPACE_FONT_FAMILY, TUTORIAL_ANIMATION } from '../constants/ui-config';
 import { useAppTheme } from '../lib/theme';
 
 interface Props {
@@ -44,26 +45,41 @@ export function TutorialOverlay({ visible, onComplete }: Props) {
   );
   const [step, setStep] = useState(0);
   const cardOpacity = useSharedValue(0);
-  const cardY = useSharedValue(26);
-  const cardScale = useSharedValue(0.96);
+  const cardY = useSharedValue(TUTORIAL_ANIMATION.cardEnterOffsetY);
+  const cardScale = useSharedValue(TUTORIAL_ANIMATION.cardEnterScale);
   const contentOpacity = useSharedValue(1);
   const contentY = useSharedValue(0);
 
   useEffect(() => {
     if (!visible) return;
 
-    cardOpacity.value = withTiming(1, { duration: 260, easing: Easing.out(Easing.quad) });
-    cardY.value = withSpring(0, { damping: 15, stiffness: 160 });
-    cardScale.value = withSpring(1, { damping: 14, stiffness: 180 });
+    cardOpacity.value = withTiming(1, {
+      duration: TUTORIAL_ANIMATION.cardEnterDurationMs,
+      easing: Easing.out(Easing.quad),
+    });
+    cardY.value = withSpring(0, {
+      damping: TUTORIAL_ANIMATION.cardEnterSpringDamping,
+      stiffness: TUTORIAL_ANIMATION.cardEnterSpringStiffness,
+    });
+    cardScale.value = withSpring(1, {
+      damping: TUTORIAL_ANIMATION.cardScaleSpringDamping,
+      stiffness: TUTORIAL_ANIMATION.cardScaleSpringStiffness,
+    });
   }, [cardOpacity, cardScale, cardY, visible]);
 
   useEffect(() => {
     if (!visible) return;
 
     contentOpacity.value = 0;
-    contentY.value = 8;
-    contentOpacity.value = withTiming(1, { duration: 280, easing: Easing.out(Easing.cubic) });
-    contentY.value = withTiming(0, { duration: 280, easing: Easing.out(Easing.exp) });
+    contentY.value = TUTORIAL_ANIMATION.contentEnterOffsetY;
+    contentOpacity.value = withTiming(1, {
+      duration: TUTORIAL_ANIMATION.contentEnterDurationMs,
+      easing: Easing.out(Easing.cubic),
+    });
+    contentY.value = withTiming(0, {
+      duration: TUTORIAL_ANIMATION.contentEnterDurationMs,
+      easing: Easing.out(Easing.exp),
+    });
   }, [contentOpacity, contentY, step, visible]);
 
   function handleNext() {
@@ -189,7 +205,7 @@ function createStyles(
       fontSize: 10,
       color: colors.textMuted,
       letterSpacing: 2,
-      fontFamily: 'monospace',
+      fontFamily: MONOSPACE_FONT_FAMILY,
     },
     iconBadge: {
       width: 52,

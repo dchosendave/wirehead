@@ -4,16 +4,11 @@ import { useEffect, useMemo, useState, type ComponentProps } from 'react';
 import { ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { THEME_OPTIONS } from '../constants';
+import { DEFAULT_SETTINGS } from '../constants/app-defaults';
+import { MONOSPACE_FONT_FAMILY } from '../constants/ui-config';
 import { loadSettings, saveSettings } from '../lib/storage';
 import { useAppTheme } from '../lib/theme';
 import type { Settings, ThemeMode } from '../types';
-
-const DEFAULT: Settings = {
-  hapticsEnabled: true,
-  soundEnabled: true,
-  tutorialCompleted: false,
-  themeMode: 'dark',
-};
 
 interface RowProps {
   icon: string;
@@ -96,7 +91,7 @@ export default function SettingsScreen() {
   const insets = useSafeAreaInsets();
   const { colors, mode, setThemeMode } = useAppTheme();
   const styles = useMemo(() => createStyles(colors), [colors]);
-  const [settings, setSettings] = useState<Settings>(DEFAULT);
+  const [settings, setSettings] = useState<Settings>(DEFAULT_SETTINGS);
 
   useEffect(() => {
     loadSettings().then((loaded) => {
@@ -274,7 +269,7 @@ function createThemeCardStyles(colors: ReturnType<typeof useAppTheme>['colors'])
       fontWeight: '900',
       letterSpacing: 1.1,
       color: colors.background,
-      fontFamily: 'monospace',
+      fontFamily: MONOSPACE_FONT_FAMILY,
     },
     swatchRow: {
       flexDirection: 'row',
@@ -359,14 +354,14 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
       fontWeight: '700',
       color: colors.textPrimary,
       letterSpacing: 1.2,
-      fontFamily: 'monospace',
+      fontFamily: MONOSPACE_FONT_FAMILY,
     },
     title: {
       fontSize: 12,
       fontWeight: '800',
       color: colors.textPrimary,
       letterSpacing: 1.6,
-      fontFamily: 'monospace',
+      fontFamily: MONOSPACE_FONT_FAMILY,
     },
     content: {
       flex: 1,
@@ -396,7 +391,7 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
       fontWeight: '700',
       color: colors.textMuted,
       letterSpacing: 2.4,
-      fontFamily: 'monospace',
+      fontFamily: MONOSPACE_FONT_FAMILY,
       marginTop: 14,
       marginLeft: 2,
       marginBottom: 4,
@@ -469,7 +464,7 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
       fontSize: 11,
       color: colors.textMuted,
       letterSpacing: 2,
-      fontFamily: 'monospace',
+      fontFamily: MONOSPACE_FONT_FAMILY,
       paddingTop: 8,
     },
   });

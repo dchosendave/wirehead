@@ -10,6 +10,7 @@ import Animated, {
   withDelay,
 } from 'react-native-reanimated';
 import Svg, { Defs, RadialGradient, Stop, Rect } from 'react-native-svg';
+import { SPLASH_SCREEN_ANIMATION } from '../constants/ui-config';
 import { useAppTheme } from '../lib/theme';
 
 const { width: W, height: H } = Dimensions.get('window');
@@ -21,20 +22,29 @@ export default function SplashScreen() {
 
   const iconScale = useSharedValue(0);
   const iconOpacity = useSharedValue(0);
-  const titleY = useSharedValue(16);
+  const titleY = useSharedValue(SPLASH_SCREEN_ANIMATION.titleOffsetY);
   const titleOp = useSharedValue(0);
   const subOp = useSharedValue(0);
 
   useEffect(() => {
-    iconOpacity.value = withTiming(1, { duration: 200 });
+    iconOpacity.value = withTiming(1, { duration: SPLASH_SCREEN_ANIMATION.iconFadeInDurationMs });
     iconScale.value = withSpring(1, { damping: 9, stiffness: 120 });
 
-    titleOp.value = withDelay(350, withTiming(1, { duration: 450 }));
-    titleY.value = withDelay(350, withTiming(0, { duration: 450 }));
+    titleOp.value = withDelay(
+      SPLASH_SCREEN_ANIMATION.titleDelayMs,
+      withTiming(1, { duration: SPLASH_SCREEN_ANIMATION.titleDurationMs }),
+    );
+    titleY.value = withDelay(
+      SPLASH_SCREEN_ANIMATION.titleDelayMs,
+      withTiming(0, { duration: SPLASH_SCREEN_ANIMATION.titleDurationMs }),
+    );
 
-    subOp.value = withDelay(650, withTiming(1, { duration: 400 }));
+    subOp.value = withDelay(
+      SPLASH_SCREEN_ANIMATION.subtitleDelayMs,
+      withTiming(1, { duration: SPLASH_SCREEN_ANIMATION.subtitleDurationMs }),
+    );
 
-    const timer = setTimeout(() => router.replace('/home'), 2000);
+    const timer = setTimeout(() => router.replace('/home'), SPLASH_SCREEN_ANIMATION.autoRouteDelayMs);
     return () => clearTimeout(timer);
   }, [iconOpacity, iconScale, router, subOp, titleOp, titleY]);
 

@@ -1,5 +1,6 @@
 import { createContext, useContext, useMemo } from 'react';
 import { DARK_COLORS, getThemeColors, type ThemeColors } from '../constants';
+import { DEFAULT_SETTINGS } from '../constants/app-defaults';
 import type { ThemeMode } from '../types';
 
 interface ThemeContextValue {
@@ -31,7 +32,7 @@ export function useAppTheme() {
 
   if (!context) {
     return {
-      mode: 'dark' as ThemeMode,
+      mode: DEFAULT_SETTINGS.themeMode,
       colors: DARK_COLORS,
       setThemeMode: (_mode: ThemeMode) => {},
     };
