@@ -388,4 +388,3 @@ These five offer the best mix of player value, technical leverage, and low/no-ba
 ---
 
 *This document should be updated whenever shipped behavior meaningfully changes so the repo, roadmap, and implementation remain aligned.*
-
