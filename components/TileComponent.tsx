@@ -40,6 +40,18 @@ export function TileComponent({ tile, size, isConnected, onRotate }: Props) {
     shouldPulse.value = isConnected && !tile.isPowerSource ? 1 : 0;
   }, [isConnected, shouldPulse, tile.isPowerSource]);
 
+  useEffect(() => {
+    const normalizedTarget = ((targetAngle.current % 360) + 360) % 360;
+    if (normalizedTarget === tile.rotation) return;
+
+    let delta = tile.rotation - normalizedTarget;
+    if (delta > 180) delta -= 360;
+    if (delta < -180) delta += 360;
+
+    targetAngle.current += delta;
+    accumulatedAngle.value = withTiming(targetAngle.current, { duration: 170 });
+  }, [accumulatedAngle, tile.rotation]);
+
   useAnimatedReaction(
     () => shouldPulse.value,
     (active) => {
