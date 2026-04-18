@@ -22,6 +22,12 @@ export interface TileCell {
   isBulb: boolean;
 }
 
+export interface MoveRecord {
+  tileId: string;
+  prevRotation: Rotation;
+  nextRotation: Rotation;
+}
+
 export interface GameState {
   currentLevel: number;
   totalCompleted: number;
@@ -30,6 +36,7 @@ export interface GameState {
   gridSize: number;
   bulbCount: number;
   isComplete: boolean;
+  undoStack: MoveRecord[];
 }
 
 export interface Settings {
