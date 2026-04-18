@@ -109,4 +109,3 @@ types/       Shared TypeScript models
 ## Documentation
 
 - Product requirements and implementation status: [product-requirement-document.md](product-requirement-document.md)
-

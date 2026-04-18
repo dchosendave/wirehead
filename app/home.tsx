@@ -138,7 +138,7 @@ export default function HomeScreen() {
   const signalStrength = Math.min(99, stats.totalLevelsCompleted * 3 + 4);
   const runState = isNewGame ? 'BOOT' : 'LIVE';
   const verticalInset = insets.bottom + (isSmallPhone ? 8 : 12);
-  const showCompactTelemetry = isCompactHeight && !isTablet;
+  const showCompactTelemetry = height < 900 && !isTablet;
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -165,7 +165,7 @@ export default function HomeScreen() {
 
             <Text style={styles.kicker}>WIREHEAD FIELD UNIT</Text>
             <Text style={styles.title}>Route{'\n'}The Circuit</Text>
-            <Text style={styles.tagline} numberOfLines={isUltraCompactHeight ? 2 : 3}>
+            <Text style={styles.tagline} numberOfLines={isUltraCompactHeight || showCompactTelemetry ? 2 : 3}>
               Restore current across the board, stabilize each relay, and keep every node illuminated.
             </Text>
 
@@ -224,7 +224,7 @@ export default function HomeScreen() {
             <Text style={styles.commandTitle}>
               {isNewGame ? 'Boot a fresh circuit run' : 'Continue the live board'}
             </Text>
-            <Text style={styles.commandHint} numberOfLines={isUltraCompactHeight ? 2 : 3}>
+            <Text style={styles.commandHint} numberOfLines={isUltraCompactHeight || showCompactTelemetry ? 2 : 3}>
               Open the control grid, rotate the wire modules, and restore flow to every lamp.
             </Text>
           </View>
@@ -404,6 +404,7 @@ function createStyles(
       color: colors.textPrimary,
     },
     telemetryPanel: {
+      flexShrink: 1,
       gap: isUltraCompactHeight ? 10 : isSmallPhone ? 12 : 14,
       paddingHorizontal: isUltraCompactHeight ? 12 : isSmallPhone ? 12 : isTablet ? 20 : 16,
       paddingVertical: isUltraCompactHeight ? 12 : isSmallPhone ? 14 : isTablet ? 22 : 18,
