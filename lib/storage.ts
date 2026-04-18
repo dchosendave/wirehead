@@ -19,10 +19,37 @@ const DEFAULT_STATS: Stats = {
   highestLevelReached: 1,
 };
 
+function isFiniteNumber(value: unknown): value is number {
+  return typeof value === 'number' && Number.isFinite(value);
+}
+
 export async function loadGameState(): Promise<GameState | null> {
   try {
     const raw = await AsyncStorage.getItem(KEYS.GAME_STATE);
-    return raw ? (JSON.parse(raw) as GameState) : null;
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw) as Partial<GameState>;
+    if (
+      !parsed ||
+      !Array.isArray(parsed.currentGrid) ||
+      !isFiniteNumber(parsed.currentLevel) ||
+      !isFiniteNumber(parsed.gridSize)
+    ) {
+      return null;
+    }
+
+    return {
+      currentLevel: parsed.currentLevel,
+      totalCompleted: isFiniteNumber(parsed.totalCompleted) ? parsed.totalCompleted : 0,
+      currentGrid: parsed.currentGrid,
+      seed: isFiniteNumber(parsed.seed) ? parsed.seed : parsed.currentLevel * 7919,
+      gridSize: parsed.gridSize,
+      bulbCount: isFiniteNumber(parsed.bulbCount)
+        ? parsed.bulbCount
+        : parsed.currentGrid.filter((cell) => cell.isBulb).length,
+      isComplete: parsed.isComplete === true,
+      undoStack: Array.isArray(parsed.undoStack) ? parsed.undoStack : [],
+    };
   } catch {
     return null;
   }
