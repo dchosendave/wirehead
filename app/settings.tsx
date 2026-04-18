@@ -1,9 +1,10 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useMemo, useState, type ComponentProps } from 'react';
-import { StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { saveSettings, loadSettings } from '../lib/storage';
+import { THEME_OPTIONS } from '../constants';
+import { loadSettings, saveSettings } from '../lib/storage';
 import { useAppTheme } from '../lib/theme';
 import type { Settings, ThemeMode } from '../types';
 
@@ -22,6 +23,14 @@ interface RowProps {
   onToggle: () => void;
 }
 
+interface ThemePackCardProps {
+  label: string;
+  description: string;
+  swatches: string[];
+  selected: boolean;
+  onPress: () => void;
+}
+
 function SettingRow({ icon: _icon, label, description, value, onToggle }: RowProps) {
   const { colors } = useAppTheme();
   const rowStyles = useMemo(() => createRowStyles(colors), [colors]);
@@ -35,11 +44,7 @@ function SettingRow({ icon: _icon, label, description, value, onToggle }: RowPro
   return (
     <View style={rowStyles.container}>
       <View style={rowStyles.iconWrap}>
-        <MaterialCommunityIcons
-          name={iconName}
-          size={18}
-          color={colors.ctaButton}
-        />
+        <MaterialCommunityIcons name={iconName} size={18} color={colors.ctaButton} />
       </View>
       <View style={rowStyles.text}>
         <Text style={rowStyles.label}>{label}</Text>
@@ -52,6 +57,37 @@ function SettingRow({ icon: _icon, label, description, value, onToggle }: RowPro
         thumbColor={colors.textPrimary}
       />
     </View>
+  );
+}
+
+function ThemePackCard({ label, description, swatches, selected, onPress }: ThemePackCardProps) {
+  const { colors } = useAppTheme();
+  const cardStyles = useMemo(() => createThemeCardStyles(colors), [colors]);
+
+  return (
+    <TouchableOpacity
+      style={[cardStyles.card, selected && cardStyles.cardSelected]}
+      onPress={onPress}
+      activeOpacity={0.82}
+    >
+      <View style={cardStyles.header}>
+        <View style={cardStyles.copy}>
+          <Text style={cardStyles.label}>{label}</Text>
+          <Text style={cardStyles.description}>{description}</Text>
+        </View>
+        {selected ? (
+          <View style={cardStyles.badge}>
+            <Text style={cardStyles.badgeText}>ACTIVE</Text>
+          </View>
+        ) : null}
+      </View>
+
+      <View style={cardStyles.swatchRow}>
+        {swatches.map((swatch, index) => (
+          <View key={`${label}-${index}`} style={[cardStyles.swatch, { backgroundColor: swatch }]} />
+        ))}
+      </View>
+    </TouchableOpacity>
   );
 }
 
@@ -75,11 +111,12 @@ export default function SettingsScreen() {
     await saveSettings(updated);
   }
 
-  async function toggleTheme() {
-    const updatedTheme: ThemeMode = mode === 'dark' ? 'light' : 'dark';
-    const updated = { ...settings, themeMode: updatedTheme };
+  async function selectTheme(themeMode: ThemeMode) {
+    if (themeMode === mode) return;
+
+    const updated = { ...settings, themeMode };
     setSettings(updated);
-    setThemeMode(updatedTheme);
+    setThemeMode(themeMode);
     await saveSettings(updated);
   }
 
@@ -98,7 +135,6 @@ export default function SettingsScreen() {
           onPress={() => router.back()}
           hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
         >
-          <Text style={styles.backIcon}>‹</Text>
           <Ionicons name="chevron-back" size={20} color={colors.ctaButton} />
           <Text style={styles.backLabel}>HOME</Text>
         </TouchableOpacity>
@@ -106,35 +142,50 @@ export default function SettingsScreen() {
         <View style={styles.headerSpacer} />
       </View>
 
-      <View style={styles.content}>
+      <ScrollView
+        style={styles.content}
+        contentContainerStyle={[styles.contentInner, { paddingBottom: insets.bottom + 24 }]}
+        showsVerticalScrollIndicator={false}
+      >
         <View style={styles.intro}>
           <Text style={styles.introTitle}>Control preferences</Text>
-          <Text style={styles.introText}>Tune feedback, switch theme, and replay the walkthrough from the panel below.</Text>
+          <Text style={styles.introText}>
+            Tune feedback, choose a cosmetic theme pack, and replay the walkthrough from the panel below.
+          </Text>
         </View>
 
         <Text style={styles.sectionLabel}>APPEARANCE</Text>
         <View style={styles.section}>
-          <View style={styles.themeRow}>
-            <View style={styles.themeRowText}>
-              <Text style={styles.themeRowLabel}>Dark mode</Text>
-              <Text style={styles.themeRowDescription}>Use a darker palette for low-light play.</Text>
-            </View>
-            <View style={styles.themeBadge}>
-              <Text style={styles.themeBadgeText}>{mode === 'dark' ? 'ON' : 'OFF'}</Text>
-            </View>
-            <Switch
-              value={mode === 'dark'}
-              onValueChange={toggleTheme}
-              trackColor={{ false: colors.wireDisconnected, true: colors.ctaButton }}
-              thumbColor={colors.textPrimary}
-            />
+          <View style={styles.themeSectionIntro}>
+            <Text style={styles.themeSectionTitle}>Theme packs</Text>
+            <Text style={styles.themeSectionDescription}>
+              Cosmetic only. These packs change the presentation of the app without altering puzzle rules or level logic.
+            </Text>
+          </View>
+
+          <View style={styles.themeList}>
+            {THEME_OPTIONS.map((theme) => (
+              <ThemePackCard
+                key={theme.id}
+                label={theme.label}
+                description={theme.description}
+                swatches={[
+                  theme.colors.background,
+                  theme.colors.surface,
+                  theme.colors.powerSource,
+                  theme.colors.wireConnected,
+                ]}
+                selected={mode === theme.id}
+                onPress={() => selectTheme(theme.id)}
+              />
+            ))}
           </View>
         </View>
 
         <Text style={styles.sectionLabel}>PREFERENCES</Text>
         <View style={styles.section}>
           <SettingRow
-            icon="📳"
+            icon="mobile"
             label="Haptics"
             description="Vibrate on tile rotate and level complete"
             value={settings.hapticsEnabled}
@@ -142,7 +193,7 @@ export default function SettingsScreen() {
           />
           <View style={styles.divider} />
           <SettingRow
-            icon="🔊"
+            icon="volume"
             label="Sound"
             description="Play audio on rotate and circuit complete"
             value={settings.soundEnabled}
@@ -155,21 +206,88 @@ export default function SettingsScreen() {
           <TouchableOpacity style={styles.actionRow} onPress={replayTutorial} activeOpacity={0.7}>
             <View style={styles.actionIconWrap}>
               <MaterialCommunityIcons name="gamepad-variant-outline" size={18} color={colors.ctaButton} />
-              <Text style={styles.actionIcon}>🎮</Text>
             </View>
             <View style={styles.actionText}>
               <Text style={styles.actionLabel}>Replay Tutorial</Text>
               <Text style={styles.actionDescription}>Show the first-play walkthrough again</Text>
             </View>
             <Ionicons name="chevron-forward" size={18} color={colors.textSecondary} />
-            <Text style={styles.chevron}>›</Text>
           </TouchableOpacity>
         </View>
-      </View>
+      </ScrollView>
 
       <Text style={[styles.version, { paddingBottom: insets.bottom + 16 }]}>WIREHEAD · v1.0.0</Text>
     </View>
   );
+}
+
+function createThemeCardStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
+  return StyleSheet.create({
+    card: {
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: colors.panelStroke,
+      backgroundColor: colors.surfaceElevated,
+      paddingHorizontal: 14,
+      paddingVertical: 14,
+      gap: 10,
+    },
+    cardSelected: {
+      borderColor: colors.ctaButton,
+      shadowColor: colors.ctaButton,
+      shadowOpacity: 0.18,
+      shadowRadius: 12,
+      shadowOffset: { width: 0, height: 6 },
+      elevation: 4,
+    },
+    header: {
+      flexDirection: 'row',
+      alignItems: 'flex-start',
+      justifyContent: 'space-between',
+      gap: 12,
+    },
+    copy: {
+      flex: 1,
+      gap: 3,
+    },
+    label: {
+      fontSize: 14,
+      fontWeight: '700',
+      color: colors.textPrimary,
+      letterSpacing: 0.4,
+    },
+    description: {
+      fontSize: 11,
+      lineHeight: 16,
+      color: colors.textSecondary,
+    },
+    badge: {
+      minHeight: 24,
+      borderRadius: 999,
+      paddingHorizontal: 9,
+      alignItems: 'center',
+      justifyContent: 'center',
+      backgroundColor: colors.ctaButton,
+    },
+    badgeText: {
+      fontSize: 9,
+      fontWeight: '900',
+      letterSpacing: 1.1,
+      color: colors.background,
+      fontFamily: 'monospace',
+    },
+    swatchRow: {
+      flexDirection: 'row',
+      gap: 8,
+    },
+    swatch: {
+      width: 22,
+      height: 22,
+      borderRadius: 999,
+      borderWidth: 1,
+      borderColor: colors.panelStroke,
+    },
+  });
 }
 
 function createRowStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
@@ -192,7 +310,6 @@ function createRowStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
       alignItems: 'center',
       justifyContent: 'center',
     },
-    icon: { fontSize: 18 },
     text: { flex: 1 },
     label: {
       fontSize: 14,
@@ -237,9 +354,6 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
     headerSpacer: {
       width: 80,
     },
-    backIcon: {
-      display: 'none',
-    },
     backLabel: {
       fontSize: 12,
       fontWeight: '700',
@@ -257,8 +371,10 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
     content: {
       flex: 1,
       paddingHorizontal: 18,
-      paddingTop: 4,
+    },
+    contentInner: {
       gap: 10,
+      paddingTop: 4,
     },
     intro: {
       marginBottom: 4,
@@ -292,45 +408,25 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
       borderColor: colors.panelStroke,
       overflow: 'hidden',
     },
-    themeRow: {
-      minHeight: 64,
-      paddingVertical: 12,
+    themeSectionIntro: {
       paddingHorizontal: 14,
-      flexDirection: 'row',
-      alignItems: 'center',
-      gap: 10,
+      paddingTop: 14,
+      gap: 4,
     },
-    themeRowText: {
-      flex: 1,
-      gap: 2,
-    },
-    themeRowLabel: {
+    themeSectionTitle: {
       fontSize: 14,
-      fontWeight: '600',
+      fontWeight: '700',
       color: colors.textPrimary,
       letterSpacing: 0.4,
     },
-    themeRowDescription: {
+    themeSectionDescription: {
       fontSize: 11,
+      lineHeight: 17,
       color: colors.textSecondary,
     },
-    themeBadge: {
-      minWidth: 40,
-      height: 26,
-      borderRadius: 999,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: colors.surfaceElevated,
-      borderWidth: 1,
-      borderColor: colors.panelStroke,
-      paddingHorizontal: 8,
-    },
-    themeBadgeText: {
-      fontSize: 10,
-      fontWeight: '800',
-      color: colors.textPrimary,
-      letterSpacing: 1,
-      fontFamily: 'monospace',
+    themeList: {
+      padding: 14,
+      gap: 12,
     },
     divider: {
       height: 1,
@@ -355,7 +451,6 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
       alignItems: 'center',
       justifyContent: 'center',
     },
-    actionIcon: { display: 'none' },
     actionText: { flex: 1 },
     actionLabel: {
       fontSize: 14,
@@ -368,19 +463,8 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
       color: colors.textSecondary,
       marginTop: 2,
     },
-    chevron: {
-      display: 'none',
-    },
     version: {
       display: 'none',
-      textAlign: 'center',
-      fontSize: 11,
-      color: colors.textMuted,
-      letterSpacing: 2,
-      fontFamily: 'monospace',
-      paddingTop: 8,
-    },
-    versionAlt: {
       textAlign: 'center',
       fontSize: 11,
       color: colors.textMuted,

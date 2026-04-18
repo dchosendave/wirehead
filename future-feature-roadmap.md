@@ -147,9 +147,15 @@ Why it matters:
 - Increases replayability
 - Reuses the same board generation and connectivity logic
 
-#### Theme Packs
+#### Theme Packs [Done]
 
 Add more visual identities without changing gameplay.
+
+Current status:
+
+- Theme packs are now cosmetic only
+- The active pack is selectable from settings
+- Current packs include Default Dark, Default Light, Neon Lab, Retro Terminal, and Blueprint Minimal
 
 Possible themes:
 
@@ -247,8 +253,7 @@ Tradeoff:
 4. Accessibility improvements
 5. Shareable seed codes
 6. Alternate game modes
-7. Theme packs
-8. Expanded stats
+7. Expanded stats
 
 ## Completed Recently
 
@@ -262,6 +267,12 @@ It is also one of the best technical fits for the current codebase:
 - The game already recalculates connectivity after every move
 - Progress is already saved locally
 - Undo was introduced without changing level generation
+
+### Theme Packs
+
+Theme packs were implemented as cosmetic-only presentation layers so the game can gain stronger visual variety without affecting puzzle generation, state handling, or difficulty.
+
+The current implementation keeps the logic untouched and surfaces pack selection through the settings screen.
 
 ## Notes For The Next Planning Pass
 

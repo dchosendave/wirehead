@@ -9,7 +9,12 @@ export type TileType =
 
 export type Rotation = 0 | 90 | 180 | 270;
 export type Direction = 'top' | 'right' | 'bottom' | 'left';
-export type ThemeMode = 'dark' | 'light';
+export type ThemeMode =
+  | 'dark'
+  | 'light'
+  | 'neon-lab'
+  | 'retro-terminal'
+  | 'blueprint-minimal';
 
 export interface TileCell {
   id: string;

@@ -3,6 +3,7 @@ import { StatusBar } from 'expo-status-bar';
 import { useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { getThemeStatusBarStyle } from '../constants';
 import { loadSettings } from '../lib/storage';
 import { ThemeProvider, useAppTheme } from '../lib/theme';
 import type { ThemeMode } from '../types';
@@ -25,7 +26,7 @@ function AppShell() {
         <Stack.Screen name="complete" />
         <Stack.Screen name="settings" />
       </Stack>
-      <StatusBar style={mode === 'dark' ? 'light' : 'dark'} />
+      <StatusBar style={getThemeStatusBarStyle(mode)} />
     </GestureHandlerRootView>
   );
 }
