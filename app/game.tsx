@@ -111,6 +111,32 @@ export default function GameScreen() {
     [],
   );
 
+  const startLevel = useCallback((level: number) => {
+    const { gridSize: gs, bulbCount } = getLevelConfig(level);
+    const seed = getLevelSeed(level);
+    const { grid: newGrid } = generateLevel(gs, bulbCount, seed);
+    const emptyUndoStack: MoveRecord[] = [];
+    setGrid(newGrid);
+    setGridSize(gs);
+    setCurrentLevel(level);
+    setIsComplete(false);
+    setUndoStack(emptyUndoStack);
+    undoStackRef.current = emptyUndoStack;
+    const result = checkConnectivity(newGrid, gs);
+    applyConnectivity(result, { animateAll: true });
+    saveGameState(
+      createGameState(
+        level,
+        statsRef.current.totalLevelsCompleted,
+        newGrid,
+        gs,
+        seed,
+        emptyUndoStack,
+        false,
+      ),
+    );
+  }, [applyConnectivity]);
+
   useEffect(() => {
     async function init() {
       const [savedState, settings, stats] = await Promise.all([
@@ -144,32 +170,6 @@ export default function GameScreen() {
     }
     init();
   }, [startLevel]);
-
-  const startLevel = useCallback((level: number) => {
-    const { gridSize: gs, bulbCount } = getLevelConfig(level);
-    const seed = getLevelSeed(level);
-    const { grid: newGrid } = generateLevel(gs, bulbCount, seed);
-    const emptyUndoStack: MoveRecord[] = [];
-    setGrid(newGrid);
-    setGridSize(gs);
-    setCurrentLevel(level);
-    setIsComplete(false);
-    setUndoStack(emptyUndoStack);
-    undoStackRef.current = emptyUndoStack;
-    const result = checkConnectivity(newGrid, gs);
-    applyConnectivity(result, { animateAll: true });
-    saveGameState(
-      createGameState(
-        level,
-        statsRef.current.totalLevelsCompleted,
-        newGrid,
-        gs,
-        seed,
-        emptyUndoStack,
-        false,
-      ),
-    );
-  }, [applyConnectivity]);
 
   function handleTutorialComplete() {
     setShowTutorial(false);
