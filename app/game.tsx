@@ -10,7 +10,7 @@ import { DEFAULT_SETTINGS, DEFAULT_STATS } from '../constants/app-defaults';
 import { GAMEPLAY_FLOW, getLevelConfig, getLevelSeed } from '../constants/game-config';
 import { getBoardTileSize, MONOSPACE_FONT_FAMILY } from '../constants/ui-config';
 import { loadSounds, playRotate, playWin, unloadSounds } from '../lib/audio';
-import { checkConnectivity } from '../lib/connectivity';
+import { checkConnectivity, type ConnectivityResult } from '../lib/connectivity';
 import { generateLevel } from '../lib/levelGenerator';
 import { loadGameState, loadSettings, loadStats, saveGameState, saveSettings, saveStats } from '../lib/storage';
 import { useAppTheme } from '../lib/theme';
@@ -51,6 +51,13 @@ export default function GameScreen() {
   const [undoStack, setUndoStack] = useState<MoveRecord[]>([]);
   const [showTutorial, setShowTutorial] = useState(false);
 
+  const [signalWaveId, setSignalWaveId] = useState(0);
+  const [signalDistanceById, setSignalDistanceById] = useState<Record<string, number>>({});
+  const [newlyConnectedIds, setNewlyConnectedIds] = useState<Set<string>>(new Set());
+
+  const connectedIdsRef = useRef<Set<string>>(new Set());
+  const signalWaveIdRef = useRef(0);
+
   const settingsRef = useRef<Settings>({ ...DEFAULT_SETTINGS });
   const statsRef = useRef<Stats>({ ...DEFAULT_STATS });
   const undoStackRef = useRef<MoveRecord[]>([]);
@@ -68,6 +75,41 @@ export default function GameScreen() {
       }
     };
   }, []);
+
+  const applyConnectivity = useCallback(
+    (result: ConnectivityResult, options?: { animateAll?: boolean }) => {
+      const animateAll = options?.animateAll === true;
+      const previousConnectedIds = connectedIdsRef.current;
+      const nextConnectedIds = result.connectedIds;
+      const nextNewlyConnectedIds = new Set<string>();
+
+      for (const id of nextConnectedIds) {
+        if (animateAll || !previousConnectedIds.has(id)) {
+          nextNewlyConnectedIds.add(id);
+        }
+      }
+
+      if (nextNewlyConnectedIds.size > 0) {
+        const powerId = Object.keys(result.distanceById).find(
+          (id) => result.distanceById[id] === 0,
+        );
+        if (powerId) {
+          nextNewlyConnectedIds.add(powerId);
+        }
+      }
+
+      connectedIdsRef.current = nextConnectedIds;
+      setConnectedIds(nextConnectedIds);
+      setSignalDistanceById(result.distanceById);
+      setNewlyConnectedIds(nextNewlyConnectedIds);
+
+      if (animateAll || nextNewlyConnectedIds.size > 0) {
+        signalWaveIdRef.current += 1;
+        setSignalWaveId(signalWaveIdRef.current);
+      }
+    },
+    [],
+  );
 
   useEffect(() => {
     async function init() {
@@ -88,7 +130,10 @@ export default function GameScreen() {
         setUndoStack(savedUndoStack);
         undoStackRef.current = savedUndoStack;
         const result = checkConnectivity(g, savedState.gridSize);
+        connectedIdsRef.current = result.connectedIds;
         setConnectedIds(result.connectedIds);
+        setSignalDistanceById(result.distanceById);
+        setNewlyConnectedIds(new Set());
       } else {
         startLevel(savedState?.isComplete ? savedState.currentLevel + 1 : stats.highestLevelReached);
       }
@@ -98,9 +143,9 @@ export default function GameScreen() {
       }
     }
     init();
-  }, []);
+  }, [startLevel]);
 
-  function startLevel(level: number) {
+  const startLevel = useCallback((level: number) => {
     const { gridSize: gs, bulbCount } = getLevelConfig(level);
     const seed = getLevelSeed(level);
     const { grid: newGrid } = generateLevel(gs, bulbCount, seed);
@@ -112,7 +157,7 @@ export default function GameScreen() {
     setUndoStack(emptyUndoStack);
     undoStackRef.current = emptyUndoStack;
     const result = checkConnectivity(newGrid, gs);
-    setConnectedIds(result.connectedIds);
+    applyConnectivity(result, { animateAll: true });
     saveGameState(
       createGameState(
         level,
@@ -124,7 +169,7 @@ export default function GameScreen() {
         false,
       ),
     );
-  }
+  }, [applyConnectivity]);
 
   function handleTutorialComplete() {
     setShowTutorial(false);
@@ -161,7 +206,7 @@ export default function GameScreen() {
         );
 
         const result = checkConnectivity(updated, gridSize);
-        setConnectedIds(result.connectedIds);
+        applyConnectivity(result);
 
         if (result.allBulbsLit) {
           setIsComplete(true);
@@ -211,7 +256,7 @@ export default function GameScreen() {
         return updated;
       });
     },
-    [gridSize, isComplete, currentLevel, router],
+    [applyConnectivity, gridSize, isComplete, currentLevel, router],
   );
 
   const handleUndo = useCallback(() => {
@@ -233,7 +278,7 @@ export default function GameScreen() {
         cell.id === lastMove.tileId ? { ...cell, rotation: lastMove.prevRotation } : cell,
       );
       const result = checkConnectivity(reverted, gridSize);
-      setConnectedIds(result.connectedIds);
+      applyConnectivity(result);
       saveGameState(
         createGameState(
           currentLevel,
@@ -247,7 +292,7 @@ export default function GameScreen() {
       );
       return reverted;
     });
-  }, [currentLevel, gridSize, isComplete]);
+  }, [applyConnectivity, currentLevel, gridSize, isComplete]);
 
   const tileSize = getBoardTileSize(SCREEN_WIDTH, SCREEN_HEIGHT, gridSize);
 
@@ -311,6 +356,9 @@ export default function GameScreen() {
               tileSize={tileSize}
               levelKey={currentLevel}
               connectedIds={displayConnectedIds}
+              signalWaveId={signalWaveId}
+              signalDistanceById={signalDistanceById}
+              newlyConnectedIds={newlyConnectedIds}
               onTileRotate={handleTileRotate}
             />
           </View>

@@ -8,6 +8,7 @@ import Animated, {
   useAnimatedReaction,
   useAnimatedStyle,
   useSharedValue,
+  withDelay,
   withRepeat,
   withSequence,
   withTiming,
@@ -22,20 +23,34 @@ interface Props {
   tile: TileCell;
   size: number;
   isConnected: boolean;
+  signalWaveId: number;
+  signalDistance?: number;
+  shouldAnimateSignal: boolean;
   onRotate: (id: string, newRotation: Rotation) => void;
 }
+
 
 const WIRE_STROKE = 6;
 const CENTER_R = 4;
 const SPECIAL_R_RATIO = 0.22;
 
-export function TileComponent({ tile, size, isConnected, onRotate }: Props) {
+export function TileComponent({
+  tile,
+  size,
+  isConnected,
+  signalWaveId,
+  signalDistance,
+  shouldAnimateSignal,
+  onRotate,
+}: Props) {
   const { colors } = useAppTheme();
   const targetAngle = useRef<number>(tile.rotation);
   const accumulatedAngle = useSharedValue<number>(tile.rotation);
   const shouldPulse = useSharedValue(isConnected && !tile.isPowerSource ? 1 : 0);
   const pulseOpacity = useSharedValue(1);
   const pressProgress = useSharedValue(0);
+  const signalOpacity = useSharedValue(0);
+  const signalScale = useSharedValue(0.88);
 
   useEffect(() => {
     shouldPulse.value = isConnected && !tile.isPowerSource ? 1 : 0;
@@ -52,6 +67,41 @@ export function TileComponent({ tile, size, isConnected, onRotate }: Props) {
     targetAngle.current += delta;
     accumulatedAngle.value = withTiming(targetAngle.current, { duration: TILE_ANIMATION.rotateDurationMs });
   }, [accumulatedAngle, tile.rotation]);
+
+  useEffect(() => {
+    if (!shouldAnimateSignal || !isConnected) return;
+
+    const delayMs = (signalDistance ?? 0) * TILE_ANIMATION.signalStepDelayMs;
+
+    cancelAnimation(signalOpacity);
+    cancelAnimation(signalScale);
+
+    signalOpacity.value = 0;
+    signalScale.value = 0.88;
+
+    signalOpacity.value = withDelay(
+      delayMs,
+      withSequence(
+        withTiming(0.92, { duration: TILE_ANIMATION.signalFlashInDurationMs }),
+        withTiming(0, { duration: TILE_ANIMATION.signalFlashOutDurationMs }),
+      ),
+    );
+
+    signalScale.value = withDelay(
+      delayMs,
+      withSequence(
+        withTiming(1.08, { duration: TILE_ANIMATION.signalFlashInDurationMs }),
+        withTiming(1, { duration: TILE_ANIMATION.signalFlashOutDurationMs }),
+      ),
+    );
+  }, [
+    isConnected,
+    shouldAnimateSignal,
+    signalDistance,
+    signalOpacity,
+    signalScale,
+    signalWaveId,
+  ]);
 
   useAnimatedReaction(
     () => shouldPulse.value,
@@ -86,6 +136,11 @@ export function TileComponent({ tile, size, isConnected, onRotate }: Props) {
 
   const glowStyle = useAnimatedStyle(() => ({
     opacity: interpolate(pressProgress.value, [0, 1], [0, 1]),
+  }));
+
+  const signalStyle = useAnimatedStyle(() => ({
+    opacity: signalOpacity.value,
+    transform: [{ scale: signalScale.value }],
   }));
 
   const styles = useMemo(() => createStyles(colors), [colors]);
@@ -139,6 +194,25 @@ export function TileComponent({ tile, size, isConnected, onRotate }: Props) {
         </Svg>
 
         <Animated.View pointerEvents="none" style={[styles.glow, glowStyle]} />
+        <Animated.View
+          pointerEvents="none"
+          style={[
+            styles.signalPulse,
+            {
+              width: size * (tile.isBulb ? 0.72 : 0.62),
+              height: size * (tile.isBulb ? 0.72 : 0.62),
+              borderRadius: size * (tile.isBulb ? 0.36 : 0.31),
+              top: half - size * (tile.isBulb ? 0.36 : 0.31),
+              left: half - size * (tile.isBulb ? 0.36 : 0.31),
+              backgroundColor: tile.isPowerSource
+                ? colors.powerSource
+                : tile.isBulb
+                  ? colors.bulbLit
+                  : colors.wireConnected,
+            },
+            signalStyle,
+          ]}
+        />
 
         <Animated.View style={[styles.rotateLayer, rotateStyle]}>
           <Animated.View style={[styles.rotateLayer, pulseStyle]}>
@@ -189,6 +263,14 @@ function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
     },
     rotateLayer: {
       ...StyleSheet.absoluteFillObject,
+    },
+    signalPulse: {
+      position: 'absolute',
+      shadowColor: colors.wireConnected,
+      shadowOpacity: 0.35,
+      shadowRadius: 12,
+      shadowOffset: { width: 0, height: 0 },
+      elevation: 6,
     },
   });
 }

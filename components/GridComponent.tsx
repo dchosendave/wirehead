@@ -6,8 +6,11 @@ interface Props {
   grid: TileCell[];
   gridSize: number;
   tileSize: number;
-  levelKey: number; // changing this remounts all tiles, resetting animation state
+  levelKey: number;
   connectedIds: Set<string>;
+  signalWaveId: number;
+  signalDistanceById: Record<string, number>;
+  newlyConnectedIds: Set<string>;
   onTileRotate: (id: string, newRotation: Rotation) => void;
 }
 
@@ -17,9 +20,11 @@ export function GridComponent({
   tileSize,
   levelKey,
   connectedIds,
+  signalWaveId,
+  signalDistanceById,
+  newlyConnectedIds,
   onTileRotate,
 }: Props) {
-  // Build rows: gridSize rows, each with gridSize cells sorted by column
   const rows: TileCell[][] = Array.from({ length: gridSize }, (_, r) =>
     grid.filter((cell) => cell.row === r).sort((a, b) => a.col - b.col),
   );
@@ -34,6 +39,9 @@ export function GridComponent({
               tile={tile}
               size={tileSize}
               isConnected={connectedIds.has(tile.id)}
+              signalWaveId={signalWaveId}
+              signalDistance={signalDistanceById[tile.id]}
+              shouldAnimateSignal={newlyConnectedIds.has(tile.id)}
               onRotate={onTileRotate}
             />
           ))}

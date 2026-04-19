@@ -26,6 +26,9 @@ export const TILE_ANIMATION = {
   pulseBrightDurationMs: 700,
   pulseDimDurationMs: 700,
   pulseResetDurationMs: 200,
+  signalStepDelayMs: 40,
+  signalFlashInDurationMs: 80,
+  signalFlashOutDurationMs: 140
 };
 
 export const TUTORIAL_ANIMATION = {

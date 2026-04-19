@@ -1,10 +1,13 @@
 import type { TileCell } from '../types';
 import { OPPOSITE, DIR_TO_DELTA, getOpenEdges } from './tileUtils';
 
+export type DistanceById = Record<string, number>;
+
 export interface ConnectivityResult {
   connectedIds: Set<string>;
   litBulbIds: Set<string>;
   allBulbsLit: boolean;
+  distanceById: DistanceById;
 }
 
 export function checkConnectivity(grid: TileCell[], gridSize: number): ConnectivityResult {
@@ -19,15 +22,23 @@ export function checkConnectivity(grid: TileCell[], gridSize: number): Connectiv
   }
 
   if (!powerSource) {
-    return { connectedIds: new Set(), litBulbIds: new Set(), allBulbsLit: false };
+    return {
+      connectedIds: new Set(),
+      litBulbIds: new Set(),
+      allBulbsLit: false,
+      distanceById: {},
+    };
   }
 
   const connectedIds = new Set<string>([powerSource.id]);
   const litBulbIds = new Set<string>();
-  const queue: TileCell[] = [powerSource];
+  const distanceById: DistanceById = { [powerSource.id]: 0 };
+  const queue: Array<{ cell: TileCell; distance: number }> = [
+    { cell: powerSource, distance: 0 },
+  ];
 
   while (queue.length > 0) {
-    const cell = queue.shift()!;
+    const { cell, distance } = queue.shift()!;
     const openEdges = getOpenEdges(cell.tileType, cell.rotation);
 
     for (const dir of openEdges) {
@@ -50,12 +61,17 @@ export function checkConnectivity(grid: TileCell[], gridSize: number): Connectiv
       const neighbor = cellMap.get(neighborId);
       if (!neighbor) continue;
 
-      // Two tiles are connected only if both open edges face each other
       const neighborEdges = getOpenEdges(neighbor.tileType, neighbor.rotation);
       if (neighborEdges.includes(OPPOSITE[dir])) {
+        const nextDistance = distance + 1;
         connectedIds.add(neighborId);
-        if (neighbor.isBulb) litBulbIds.add(neighborId);
-        queue.push(neighbor);
+        distanceById[neighborId] = nextDistance;
+
+        if (neighbor.isBulb) {
+          litBulbIds.add(neighborId);
+        }
+
+        queue.push({ cell: neighbor, distance: nextDistance });
       }
     }
   }
@@ -63,6 +79,11 @@ export function checkConnectivity(grid: TileCell[], gridSize: number): Connectiv
   return {
     connectedIds,
     litBulbIds,
-    allBulbsLit: allBulbIds.length > 0 && allBulbIds.every((id) => litBulbIds.has(id)),
+    allBulbsLit: allBulbIds.length > 0 && allBulbsLit(allBulbIds, litBulbIds),
+    distanceById,
   };
+}
+
+function allBulbsLit(allBulbIds: string[], litBulbIds: Set<string>) {
+  return allBulbIds.every((id) => litBulbIds.has(id));
 }
