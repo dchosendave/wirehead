@@ -1,7 +1,7 @@
 import { createContext, useContext, useMemo } from 'react';
-import { DARK_COLORS, getThemeColors, type ThemeColors } from '../constants';
+import { DARK_COLORS, getThemeColors } from '../constants';
 import { DEFAULT_SETTINGS } from '../constants/app-defaults';
-import type { ThemeMode } from '../types';
+import type { ThemeColors, ThemeMode } from '../types';
 
 interface ThemeContextValue {
   mode: ThemeMode;

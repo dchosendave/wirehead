@@ -1,90 +1,16 @@
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
-import { useEffect, useMemo, useState, type ComponentProps } from 'react';
-import { ScrollView, StyleSheet, Switch, Text, TouchableOpacity, View } from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { ScrollView, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { SettingRow } from '../components/settings/SettingRow';
+import { ThemePackCard } from '../components/settings/ThemePackCard';
 import { THEME_OPTIONS } from '../constants';
 import { DEFAULT_SETTINGS } from '../constants/app-defaults';
 import { MONOSPACE_FONT_FAMILY } from '../constants/ui-config';
 import { loadSettings, saveSettings } from '../lib/storage';
 import { useAppTheme } from '../lib/theme';
 import type { Settings, ThemeMode } from '../types';
-
-interface RowProps {
-  icon: string;
-  label: string;
-  description: string;
-  value: boolean;
-  onToggle: () => void;
-}
-
-interface ThemePackCardProps {
-  label: string;
-  description: string;
-  swatches: string[];
-  selected: boolean;
-  onPress: () => void;
-}
-
-function SettingRow({ icon: _icon, label, description, value, onToggle }: RowProps) {
-  const { colors } = useAppTheme();
-  const rowStyles = useMemo(() => createRowStyles(colors), [colors]);
-  const iconName: ComponentProps<typeof MaterialCommunityIcons>['name'] =
-    label === 'Haptics'
-      ? 'vibrate'
-      : label === 'Sound'
-        ? 'volume-high'
-        : 'tune';
-
-  return (
-    <View style={rowStyles.container}>
-      <View style={rowStyles.iconWrap}>
-        <MaterialCommunityIcons name={iconName} size={18} color={colors.ctaButton} />
-      </View>
-      <View style={rowStyles.text}>
-        <Text style={rowStyles.label}>{label}</Text>
-        <Text style={rowStyles.description}>{description}</Text>
-      </View>
-      <Switch
-        value={value}
-        onValueChange={onToggle}
-        trackColor={{ false: colors.wireDisconnected, true: colors.ctaButton }}
-        thumbColor={colors.textPrimary}
-      />
-    </View>
-  );
-}
-
-function ThemePackCard({ label, description, swatches, selected, onPress }: ThemePackCardProps) {
-  const { colors } = useAppTheme();
-  const cardStyles = useMemo(() => createThemeCardStyles(colors), [colors]);
-
-  return (
-    <TouchableOpacity
-      style={[cardStyles.card, selected && cardStyles.cardSelected]}
-      onPress={onPress}
-      activeOpacity={0.82}
-    >
-      <View style={cardStyles.header}>
-        <View style={cardStyles.copy}>
-          <Text style={cardStyles.label}>{label}</Text>
-          <Text style={cardStyles.description}>{description}</Text>
-        </View>
-        {selected ? (
-          <View style={cardStyles.badge}>
-            <Text style={cardStyles.badgeText}>ACTIVE</Text>
-          </View>
-        ) : null}
-      </View>
-
-      <View style={cardStyles.swatchRow}>
-        {swatches.map((swatch, index) => (
-          <View key={`${label}-${index}`} style={[cardStyles.swatch, { backgroundColor: swatch }]} />
-        ))}
-      </View>
-    </TouchableOpacity>
-  );
-}
 
 export default function SettingsScreen() {
   const router = useRouter();
@@ -180,7 +106,7 @@ export default function SettingsScreen() {
         <Text style={styles.sectionLabel}>PREFERENCES</Text>
         <View style={styles.section}>
           <SettingRow
-            icon="mobile"
+            iconName="vibrate"
             label="Haptics"
             description="Vibrate on tile rotate and level complete"
             value={settings.hapticsEnabled}
@@ -188,7 +114,7 @@ export default function SettingsScreen() {
           />
           <View style={styles.divider} />
           <SettingRow
-            icon="volume"
+            iconName="volume-high"
             label="Sound"
             description="Play audio on rotate and circuit complete"
             value={settings.soundEnabled}
@@ -214,110 +140,6 @@ export default function SettingsScreen() {
       <Text style={[styles.version, { paddingBottom: insets.bottom + 16 }]}>WIREHEAD · v1.0.0</Text>
     </View>
   );
-}
-
-function createThemeCardStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
-  return StyleSheet.create({
-    card: {
-      borderRadius: 16,
-      borderWidth: 1,
-      borderColor: colors.panelStroke,
-      backgroundColor: colors.surfaceElevated,
-      paddingHorizontal: 14,
-      paddingVertical: 14,
-      gap: 10,
-    },
-    cardSelected: {
-      borderColor: colors.ctaButton,
-      shadowColor: colors.ctaButton,
-      shadowOpacity: 0.18,
-      shadowRadius: 12,
-      shadowOffset: { width: 0, height: 6 },
-      elevation: 4,
-    },
-    header: {
-      flexDirection: 'row',
-      alignItems: 'flex-start',
-      justifyContent: 'space-between',
-      gap: 12,
-    },
-    copy: {
-      flex: 1,
-      gap: 3,
-    },
-    label: {
-      fontSize: 14,
-      fontWeight: '700',
-      color: colors.textPrimary,
-      letterSpacing: 0.4,
-    },
-    description: {
-      fontSize: 11,
-      lineHeight: 16,
-      color: colors.textSecondary,
-    },
-    badge: {
-      minHeight: 24,
-      borderRadius: 999,
-      paddingHorizontal: 9,
-      alignItems: 'center',
-      justifyContent: 'center',
-      backgroundColor: colors.ctaButton,
-    },
-    badgeText: {
-      fontSize: 9,
-      fontWeight: '900',
-      letterSpacing: 1.1,
-      color: colors.background,
-      fontFamily: MONOSPACE_FONT_FAMILY,
-    },
-    swatchRow: {
-      flexDirection: 'row',
-      gap: 8,
-    },
-    swatch: {
-      width: 22,
-      height: 22,
-      borderRadius: 999,
-      borderWidth: 1,
-      borderColor: colors.panelStroke,
-    },
-  });
-}
-
-function createRowStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
-  return StyleSheet.create({
-    container: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      minHeight: 64,
-      paddingVertical: 12,
-      paddingHorizontal: 14,
-      gap: 12,
-    },
-    iconWrap: {
-      width: 38,
-      height: 38,
-      borderRadius: 10,
-      backgroundColor: colors.surfaceElevated,
-      borderWidth: 1,
-      borderColor: colors.panelStroke,
-      alignItems: 'center',
-      justifyContent: 'center',
-    },
-    text: { flex: 1 },
-    label: {
-      fontSize: 14,
-      fontWeight: '600',
-      color: colors.textPrimary,
-      letterSpacing: 0.4,
-    },
-    description: {
-      fontSize: 11,
-      color: colors.textSecondary,
-      marginTop: 2,
-    },
-  });
 }
 
 function createStyles(colors: ReturnType<typeof useAppTheme>['colors']) {
